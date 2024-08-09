@@ -1,0 +1,211 @@
+{
+    "methods":
+    [
+        {
+            "id": 0,
+            "className": "",
+            "methodName": "M",
+            "methodDescriptor": "()V",
+            "metrics": 
+            [
+                {
+                    "key": "methodSize",
+                    "value": 15
+                }
+            ],
+            "inlines": [
+                {
+                    "caller": 0,
+                    "callerIndex": -1,
+                    "callee": 1,
+                    "calleeIndex": 0,
+                    "callSite": 9,
+                    "size": 5
+                },
+                {
+                    "caller": 1,
+                    "callerIndex": 0,
+                    "callee": 2,
+                    "calleeIndex": 1,
+                    "callSite": 15,
+                    "size": 7
+                },
+                {
+                    "caller": 1,
+                    "callerIndex": 0,
+                    "callee": 3,
+                    "calleeIndex": 2,
+                    "callSite": 20,
+                    "size": 10
+                }
+            ],
+            "sampleCount": 0
+        },
+        {
+            "id": 1,
+            "className": "",
+            "methodName": "A",
+            "methodDescriptor": "()V",
+            "metrics": 
+            [
+                {
+                    "key": "methodSize",
+                    "value": 5
+                }
+            ],
+            "inlines": [],
+            "sampleCount": 2
+        },
+        {
+            "id": 2,
+            "className": "",
+            "methodName": "B",
+            "methodDescriptor": "()V",
+            "metrics": 
+            [
+                {
+                    "key": "methodSize",
+                    "value": 7
+                }
+            ],
+            "inlines": [],
+            "sampleCount": 3
+        },
+        {
+            "id": 3,
+            "className": "",
+            "methodName": "C",
+            "methodDescriptor": "()V",
+            "metrics": 
+            [
+                {
+                    "key": "methodSize",
+                    "value": 10
+                }
+            ],
+            "inlines": [],
+            "sampleCount": 4
+        },
+        {
+            "id": 4,
+            "className": "",
+            "methodName": "D",
+            "methodDescriptor": "()V",
+            "metrics": 
+            [
+                {
+                    "key": "methodSize",
+                    "value": 3
+                }
+            ],
+            "inlines": []
+            ,
+            "sampleCount": 0
+        }
+    ],
+    "paths": 
+    [
+        {
+            "id": 0,
+            "callSite": "0x1001",
+            "execType": "interpreted",
+            "children": 
+            [
+                {
+                    "id": 1,
+                    "callSite": "3",
+                    "execType": "interpreted",
+                    "children": 
+                    [
+                    {
+                        "id": 2,
+                        "callSite": "3",
+                        "execType": "interpreted",
+                        "children": []
+                    },
+                    {
+                        "id": 3,
+                        "callSite": "6",
+                        "execType": "interpreted",
+                        "children": []
+                    }
+                    ]
+                }, 
+                {
+                    "id": 4,
+                    "callSite": "1",
+                    "execType": "interpreted",
+                    "children": 
+                    [
+                        {
+                            "id": 1,
+                            "callSite": "5",
+                            "execType": "interpreted",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "id": 4,
+                    "callSite": "3",
+                    "execType": "interpreted",
+                    "children": 
+                    [
+                        {
+                            "id": 3,
+                            "callSite": "1",
+                            "execType": "interpreted",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "id": 1,
+                    "callSite": "33",
+                    "execType": "compiled",
+                    "children": 
+                    [
+                        {
+                            "id": 2,
+                            "callSite": "5",
+                            "execType": "interpreted",
+                            "children": []
+                        },
+                        {
+                            "id": 2,
+                            "callSite": "31",
+                            "execType": "compiled",
+                            "children": []
+                        },
+                        {
+                            "id": 3,
+                            "callSite": "13",
+                            "execType": "interpreted",
+                            "children": []
+                        },
+                        {
+                            "id": 3,
+                            "callSite": "6",
+                            "execType": "interpreted",
+                            "children": 
+                            [
+                                {
+                                    "id": 1,
+                                    "callSite": "3",
+                                    "execType": "interpreted",
+                                    "children": []
+                                },
+                                {
+                                    "id": 3,
+                                    "callSite": "3",
+                                    "execType": "interpreted",
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

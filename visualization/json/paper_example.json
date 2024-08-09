@@ -1,0 +1,161 @@
+{
+    "methods":
+    [
+        {
+            "id": 0,
+            "className": "",
+            "methodName": "A",
+            "methodDescriptor": "()V",
+            "metrics": 
+            [
+                {
+                    "key": "methodSize",
+                    "value": 7
+                }
+            ],
+            "inlines": [
+                {
+                    "caller": 0,
+                    "callerIndex": -1,
+                    "callee": 3,
+                    "calleeIndex": 0,
+                    "callSite": 9,
+                    "size": 8
+                }
+            ],
+            "sampleCount": 0
+        },
+        {
+            "id": 1,
+            "className": "",
+            "methodName": "B",
+            "methodDescriptor": "()V",
+            "metrics": 
+            [
+                {
+                    "key": "methodSize",
+                    "value": 7
+                }
+            ],
+            "inlines": [ {
+                "caller": 1,
+                "callerIndex": -1,
+                "callee": 3,
+                "calleeIndex": 0,
+                "callSite": 9,
+                "size": 8
+            }],
+            "sampleCount": 2
+        },
+        {
+            "id": 2,
+            "className": "",
+            "methodName": "C",
+            "methodDescriptor": "()V",
+            "metrics": 
+            [
+                {
+                    "key": "methodSize",
+                    "value": 7
+                }
+            ],
+            "inlines": [ {
+                "caller": 2,
+                "callerIndex": -1,
+                "callee": 3,
+                "calleeIndex": 0,
+                "callSite": 9,
+                "size": 8
+            }],
+            "sampleCount": 3
+        },
+        {
+            "id": 3,
+            "className": "",
+            "methodName": "D",
+            "methodDescriptor": "()V",
+            "metrics": 
+            [
+                {
+                    "key": "methodSize",
+                    "value": 7
+                }
+            ],
+            "inlines": [],
+            "sampleCount": 4
+        }
+    ],
+    "paths": 
+    [
+        {
+            "id": 0,
+            "callSite": "0x1001",
+            "execType": "interpreted",
+            "children": 
+            [
+                {
+                    "id": 3,
+                    "callSite": "3",
+                    "execType": "compiled",
+                    "children": 
+                    []
+                },
+                {
+                    "id": 1,
+                    "callSite": "1",
+                    "execType": "compiled",
+                    "children": 
+                    [
+                        {
+                            "id": 3,
+                            "callSite": "5",
+                            "execType": "compiled",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "id": 1,
+                    "callSite": "3",
+                    "execType": "compiled",
+                    "children": 
+                    []
+                },
+                {
+                    "id": 2,
+                    "callSite": "1",
+                    "execType": "compiled",
+                    "children": 
+                    [
+                        {
+                            "id": 3,
+                            "callSite": "5",
+                            "execType": "compiled",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "id": 1,
+                    "callSite": "33",
+                    "execType": "compiled",
+                    "children": 
+                    [
+                        {
+                            "id": 2,
+                            "callSite": "5",
+                            "execType": "interpreted",
+                            "children": []
+                        },
+                        {
+                            "id": 2,
+                            "callSite": "31",
+                            "execType": "compiled",
+                            "children": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

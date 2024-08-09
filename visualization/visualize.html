@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css"
+        integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js"
+        integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+        crossorigin="anonymous"></script>
+
+    <title>Call Graph</title>
+
+    <style type="text/css">
+        html,
+        body {
+            height: 100%;
+        }
+
+        .inputContainer {
+            width: 100%;
+            height: 30px;
+            position: fixed;
+            background-color: #fff;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 0px
+        }
+
+        .sidepanel {
+            resize: horizontal;
+            position: fixed;
+            width: 0;
+            top: 30px;
+            right: 0;
+            height: 100%;
+            background-color: #fff;
+            overflow-x: scroll;
+            transition: 0.5s;
+            box-shadow: -3px 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .panelContent {
+            padding-top: 16px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .panelHeader {
+            font-size: 24px;
+            color: #08326c;
+            margin-bottom: 20px;
+        }
+
+        .sidepanel .closebtn {
+            position: absolute;
+            top: 4px;
+            right: 15px;
+            font-size: 36px;
+            cursor: pointer;
+        }
+
+        .sidepanel div {
+            /* margin-bottom: 40px; */
+            color: #333;
+            text-overflow: ellipsis;
+        }
+
+        .sidepanel ul {
+            list-style-type: none;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        .sidepanel li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sidepanel a:hover,
+        .sidepanel li:hover {
+            color: #0056b3;
+        }
+
+        .filterRow {
+            border: 2px solid black;
+        }
+
+        .panelRow {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 10px 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: auto;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .panelRow ul {
+            list-style-type: none;
+        }
+
+        .panelRow ul li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            overflow: auto;
+        }
+
+        .panelRow ul li:last-child {
+            border-bottom: none;
+        }
+
+        #myNetwork {
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+
+
+
+        }
+
+        .card-body {
+            padding: 0rem 0rem;
+            padding-top: 0rem;
+            padding-right: 0rem;
+            padding-bottom: 0rem;
+            padding-left: 0rem;
+        }
+
+        #myOverlay {
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+
+        #resizer {
+            resize: horizontal;
+            position: absolute;
+            width: 0;
+            top: 0px;
+            right: 0;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.05);
+            overflow-x: scroll;
+            transition: 0.5s;
+            box-shadow: -3px 0 5px rgba(0, 0, 0, 0.2);
+            cursor: col-resize;
+        }
+
+
+
+        #loader {
+        border: 16px solid rgba(255, 255, 255, 0.5);
+        border-top: 16px solid rgb(27, 40, 61);
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        animation: spin 2s linear infinite;
+        }
+
+        #loader:after {
+            position: absolute;
+            bottom: 100%;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #search-overlay {
+            left: 40%;
+            right: 40%;
+            top: 25%;
+            width: 20%;
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        #loader-text {
+            font-family: sans-serif;
+            text-align: center;
+            margin-top: 10px; /* Adjust if needed to create space between loader and text */
+        }
+        
+        .legend { 
+            list-style: none; 
+            position: fixed; 
+            top: 40px; 
+            left: 15px; 
+            background: rgba(255, 255, 255, 0.8); 
+            padding: 10px; 
+            border-radius: 5px; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index:100;
+        }
+        .legend li { 
+            margin-bottom: 10px;
+            padding-right: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .legend span { 
+            border: 2px solid #ccc; 
+            width: 15px; 
+            height: 15px; 
+            margin-right: 10px; 
+        }
+        .legend .circle { 
+            background-color: #D2E5FF;
+            border-color:#D2E5FF; 
+            border-radius: 50% ; 
+            }
+        .legend .diamond { 
+            background-color: #D2E5FF;
+            border-color:#D2E5FF; 
+            transform:rotate(45deg);
+            }
+        .legend .hex { 
+            background-color: #cc0000;
+            border-color: #cc0000;
+            aspect-ratio: 1/cos(30deg);
+            clip-path: polygon(50% -50%,100% 50%,50% 150%,0 50%); 
+        }
+        .legend .square { 
+            background-color: #d3d3d3; 
+            border-color: #d3d3d3; 
+        }
+
+    </style>
+</head>
+
+<body>
+    <!-- filter options -->
+    <div class="inputContainer">
+        <input id="fileInput" type="file" accept=".json" style="width: 20%;">
+        <select name="filterType" id="filterSelect">
+            <option id="sampleCountOption" value="sampleCount">Sample Count</option>
+            <option id="incomingOption" value="incoming">Incoming Edges</option>
+            <option id="outgoingOption" value="outgoing">Outgoing Edges</option>
+            <option id="sizeOption" value="methodSize">Method Size</option>
+            <option id="inlinedOption" value="inlined">Inlines</option>
+            <option id="inlinedIntoOption" value="inlinedInto">Inlined into</option>
+        </select>
+        <input id="filterSlider" type="range" min="0" max="0" value="" step="1" style="width: 15%;">
+        <input id="filterInput" type="number" value="" style="width: 100px;">
+        <input id="filterExtraOnly" type="checkbox" value="" style="width: 20px;" checked>
+        <label id="extraOnlyLabel" for="filterExtraOnly">"Extra" Only</label>
+        <div id="filterStatus" style="float:right; padding-right: 10px;"></div>
+    </div>
+    <!-- side panel for displaying detailed info -->
+    <!-- TODO: make side panel width adjustable at runtime -->
+    <div id="mySidePanel" class="sidepanel">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeSidePanel()">×</a>
+        <div class="panelContent" id="mySidePanelContent">
+            <div class="panelHeader"><b>Method Info</b>
+            </div>
+            <div class="panelRow">
+                <span id="methodName" style="float:left;">Name:</span>
+                <span style="float:right;"><a href="javascript:void(0)" onclick="focusGraph()">[goto]</a></span>
+            </div>
+            <div class="panelRow" id="methodSize"><b>Size:</b>
+            </div>
+            <div class="panelRow" id="sampleCount"><b>Sample Count:</b>
+            </div>
+            <div class="panelRow" id="inCalls"><b>Total Incoming Edges:</b>
+                <span style="float:right;">
+                    <a id="toggleInMethodsBtn" href="javascript:void(0)" onclick="toggleInMethods()">[show]</a>
+                </span>
+            </div>
+            <div class="panelRow" id="outCalls"><b>Total Outgoing Edges:</b>
+            </div>
+            <div class="panelRow" id="inlines">
+                <span id="inlinesLabel" style="float:left;">Inlines:</span>
+                <span style="float:right;">
+                    <a id="toggleInlinesBtn" href="javascript:void(0)" onclick="toggleInlines()">[show]</a>
+                </span>
+                <ul class="panelRow" id="inlineList" style="clear: both;">
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div id="resizer"></div>
+    <div id="container" style="width: 100%; height: 100% ">
+        <div id="legendElm"></div>
+        <div id="myNetwork" class="card-body">
+        </div>
+        <!-- NOTE: This canvas is where the back edges and labels are drawn -->
+        <canvas id="myOverlay"></canvas>
+        <!-- container for loading overlay -->
+        <div id="loadingContainer"></div>
+    </div>
+    <div id="resizer"></div>
+    <script>
+        // GLOBAL VARIABLES ----------------------------------------------------------------------------------
+        const _options = {
+            "layout": {
+                "improvedLayout": true,
+                "clusterThreshold": 150,
+                "hierarchical": {
+                    "enabled": true,
+                    "levelSeparation": 250,
+                    "nodeSpacing": 500,
+                    "treeSpacing": 200,
+                    "blockShifting": true,
+                    "edgeMinimization": true,
+                    "parentCentralization": true,
+                    "direction": "UD",
+                    "sortMethod": "directed",
+                    "shakeTowards": "roots"
+                }
+            },
+            "physics": {
+                "enabled": false,
+                "timestep": 0.5,
+                "barnesHut": {
+                    "theta": 0.5,
+                    "gravitationalConstant": -10000,
+                    "springLength": 200,
+                    "damping": 1,
+                    "avoidOverlap": 1
+                },
+                "stabilization": {
+                    "iterations": 1000,
+                    "updateInterval": 50,
+                    "onlyDynamicEdges": false
+                }
+            },
+            "configure": {
+                "enabled": false
+            },
+            "autoResize": true,
+            "edges": {
+                "arrowStrikethrough": true,
+                "selfReference": {
+                    "size": 10,
+                    "angle": 4.7,
+                    "renderBehindTheNode": false
+                },
+                "font": {
+                    "align": "horizontal"
+                },
+                "smooth": {
+                    "enabled": true,
+                    "type": "discrete",
+                    "forceDirection": true,
+                    "roundness": 0.15,
+                },
+                "color": {
+                    "inherit": "to",
+                },
+                "hoverWidth": 1,
+                "selectionWidth": 0,
+                "labelHighlightBold": true,
+                "width": 3
+            },
+            "nodes": {
+                "labelHighlightBold": false,
+                "chosen": true,
+                "borderWidth": 2
+            },
+            "interaction": { "hover": true }
+        }
+        const DEFAULT_CURSOR = "grab";
+        const ACTIVE_CURSOR = "grabbing";
+        const INTERACTABLE_CURSOR = "pointer";
+        const ANIMATE_SIZE_THRESHOLD = 50;
+        const NODE_SIZE_DELTA = 3;
+        const EDGE_SIZE_DELTA = 2;
+        const MAX_NODE_SIZE = 100;
+        const MIN_NODE_SIZE = 10;
+        const MAX_EDGE_WIDTH = 10;
+        const MIN_EDGE_WIDTH = 1;
+        const MAX_LABEL_LENGTH = 24;
+        const INLINE_COLOR = "#d3d3d3";
+        const INLINE_SHAPE = "square";
+        const DEFAULT_SHAPE = "dot";
+        const EXTRA_SHAPE = "hexagon";
+        const OVER_THRESH_OPACITY = 1;
+        const UNDER_THRESH_OPACITY = 0.45;
+        const OVERLAY_FONT_SIZE = 10;
+        const OVERLAY_FONT_TYPE = "sans-serif";
+        const OVERLAY_TEXT_ALIGN = "center";
+        const OVERLAY_FONT_COLOR = "#000000";
+        const OVERLAY_TEXT_BASELINE = "middle";
+        const OVER_THRESH_FONT_COLOR = "#000000";
+        const UNDER_THRESH_FONT_COLOR = "#808080";
+        const EXTRA_COLOR = "#cc0000";
+        const DEFAULT_COLOR = "#D2E5FF";
+        const DEFAULT_BORDER_COLOR = "#2b7ce9";
+        const OVERLAY_LINE_WIDTH = 1.5;
+        const OVERLAY_LINE_COLOR = "#97c2fc";
+        const _fileInputElem = document.getElementById('fileInput');
+        const _filterSelectElem = document.getElementById("filterSelect");
+        const _filterSliderElem = document.getElementById("filterSlider");
+        const _filterInputElem = document.getElementById("filterInput");
+        const _filterExtraOnlyElem = document.getElementById("filterExtraOnly");
+        const _filterStatusElem = document.getElementById("filterStatus");
+        const _containerElem = document.getElementById('container');
+        const _myNetworkElem = document.getElementById('myNetwork');
+        const _overlayCanvasElem = document.getElementById('myOverlay');
+        const _overlayContext = _overlayCanvasElem.getContext("2d");
+        const _mySidePanelElem = document.getElementById('mySidePanel');
+        const _mySidePanelContentElem = document.getElementById('mySidePanelContent');
+        const _loadingContainer = document.getElementById("loadingContainer");
+        const _sampleCountOptionElem = document.getElementById("sampleCountOption");
+        const _incomingOptionElem = document.getElementById("incomingOption");
+        const _outgoingOptionElem = document.getElementById("outgoingOption");
+        const _methodSizeOptionElem = document.getElementById("sizeOption");
+        const _inlinedOptionElem = document.getElementById("inlinedOption");
+        const _inlinedIntoOptionElem = document.getElementById("inlinedIntoOption");
+        const _extraOnlyLabelElem = document.getElementById("extraOnlyLabel");
+        const _resizeElm = document.getElementById("resizer");
+        const _legendElm=document.getElementById("legendElm")
+        var _methodNameElem;
+        var _sampleCountElem;
+        var _methodSizeElem;
+        var _methodSizeWithInlinesElem;
+        var _inlinedElem;
+        var _inlineLabelElem;
+        var _inlineListElem;
+        var _toggleInlineBtnElem;
+        var _inlinedIntoElem;
+        var _inlinedIntoLabelElem;
+        var _inlinedIntoListElem;
+        var _toggleInlinedIntoBtnElem;
+        var _incomingCallsElem;
+        var _outgoingCallsElem;
+        const _fileReader = new FileReader(); // used to read JSON input
+        var _network = new vis.Network(_myNetworkElem, {}, {}); // main graph/network visualization object from vis.js
+        const _nodes = new vis.DataSet(); // data container for nodes that are currently displayed by the network
+        const _edges = new vis.DataSet(); // data container for edges that are currently displayed by the network
+        const _methodMap = new Map(); // stores methods: Map(key=method id, value=method object) (note: method == node) 
+        const _methodNameMap = new Map(); // stores method name to method id mapping: Map(key=method full name, value=method id)
+        const _callMap = new Map(); // stores calls between methods: Map(key=call id, value=call object) (note: call == edge)
+        const _inlineMethodMap = new Map(); // stores inlined methods: Map(key=method id, value=method object) (note: method == node)
+        const _inlineCallMap = new Map(); // stores inlines between methods: Map(key=inline id, value=inline object) (note: inline == edge)
+        const _activeHorizontalEdges = new Set(); // stores active horizontal edge ids (for drawing labels on overlay)
+        const _maxValueMap = new Map();
+        const _minValueMap = new Map();
+        const _maxValueMapExtra = new Map();
+        const _minValueMapExtra = new Map();
+        const _filterRowElemMap = new Map();
+        var _extraCount = 0;
+        var _maxMethodSize = 0;
+        var _minMethodSize = 999999;
+        var _focusedId = -1; // method id for method that should be displayed in the side panel
+        var _clickTimeoutId = undefined;
+        var _filterRowElem = undefined;
+
+
+        // FUNCTIONS ------------------------------------------------------------------------------------------
+
+        function displayLoading() {
+            _loadingContainer.innerHTML = '<div id="search-overlay"><div id="loader"></div><div id="loader-text">Reading file...<br> This may take a few seconds...</div></div>'
+        }
+
+        function hideLoading() {
+            _loadingContainer.innerHTML = '';
+        }
+
+        function resetGlobals() {
+            _network.destroy();
+            _nodes.clear();
+            _edges.clear();
+            _methodMap.clear();
+            _methodNameMap.clear();
+            _callMap.clear();
+            _activeHorizontalEdges.clear();
+            _maxValueMap.clear();
+            _maxValueMapExtra.clear();
+            _minValueMap.clear();
+            _minValueMapExtra.clear();
+            _filterRowElemMap.clear();
+            _maxMethodSize = 0;
+            _minMethodSize = 999999;
+            _extraCount = 0;
+            _focusedId = -1;
+        }
+
+        function focusGraph(id = undefined) {
+            if (id === undefined) {
+                if (_nodes.get(_focusedId) != null) {
+                    _network.focus(_focusedId, {
+                        scale: 1.25,
+                        animation: _nodes.length < ANIMATE_SIZE_THRESHOLD
+                    });
+                    return;
+                } else {
+                    _network.fit({
+                        nodes: _nodes.getIds(),
+                        animation: _nodes.length < ANIMATE_SIZE_THRESHOLD,
+                    });
+                }
+            } else if (_nodes.get(id) != null) {
+                _network.focus(id, {
+                    scale: 1.25,
+                    animation: _nodes.length < ANIMATE_SIZE_THRESHOLD
+                });
+            } else if (_edges.get(id) != null) {
+                const edge = _edges.get(id);
+                _network.fit({
+                    nodes: [edge.to, edge.from],
+                    animation: _nodes.length < ANIMATE_SIZE_THRESHOLD,
+                });
+            }
+        }
+
+        function updateSelfReferenceSize(methodId) {
+            _methodMap.get(methodId).outCalls.forEach((edgeId) => {
+                const edge = _edges.get(edgeId);
+                if (edge != null && edge.from == edge.to) {
+                    // remove then add to draw on top
+                    _edges.remove(edge.id);
+                    _edges.add(edge);
+                    _edges.updateOnly({
+                        id: edge.id,
+                        selfReference: {
+                            size: Math.min(30, _nodes.get(edge.to).size)
+                        },
+                    });
+                }
+            });
+        }
+
+        function closeSidePanel() {
+            _mySidePanelElem.style.width = "0%";
+            _containerElem.style.width = "100%";
+            _overlayCanvasElem.style.width = "100%";
+            _focusedId = -1;
+            _network.redraw();
+        }
+
+        function clearSidePanel() {
+            // clears all contents from side panel
+            _mySidePanelContentElem.innerHTML = "";
+        }
+
+        function showCallInfo(callId) {
+            if (_callMap.has(callId)) {
+                const call = _callMap.get(callId);
+                const callInfoHeaderElem = document.createElement("div");
+                callInfoHeaderElem.className = "panelHeader";
+                callInfoHeaderElem.innerHTML = "<b>Call Info</b>";
+                _mySidePanelContentElem.appendChild(callInfoHeaderElem);
+
+                //Execution type
+                _execTypeElem = document.createElement("div");
+                _execTypeElem.className = "panelRow";
+                _mySidePanelContentElem.appendChild(_execTypeElem);
+
+                //From method
+                const fromMethodNameElem = document.createElement("div");
+                fromMethodNameElem.className = "panelRow"
+                _fromMethodName = document.createElement("span");
+                _fromMethodName.style = "float:left;";
+                fromMethodNameElem.appendChild(_fromMethodName);
+
+                const fromMethodGoToElem = document.createElement("span");
+                fromMethodGoToElem.style = "float:right;";
+                const fromMethodGoToBtnElem = document.createElement("a");
+                fromMethodGoToBtnElem.href = "javascript:void(0)";
+                fromMethodGoToBtnElem.onclick = () => { focusGraph(call.from); };
+                fromMethodGoToBtnElem.textContent = "[goto]";
+                fromMethodGoToElem.appendChild(fromMethodGoToBtnElem);
+                fromMethodNameElem.appendChild(fromMethodGoToElem);
+                _mySidePanelContentElem.appendChild(fromMethodNameElem);
+
+                //To method
+                const toMethodNameElem = document.createElement("div");
+                toMethodNameElem.className = "panelRow"
+                _toMethodName = document.createElement("span");
+                _toMethodName.style = "float:left;";
+                toMethodNameElem.appendChild(_toMethodName);
+
+                const toMethodGoToElem = document.createElement("span");
+                toMethodGoToElem.style = "float:right;";
+                const toMethodGoToBtnElem = document.createElement("a");
+                toMethodGoToBtnElem.href = "javascript:void(0)";
+                toMethodGoToBtnElem.onclick = () => { focusGraph(call.to); };
+                toMethodGoToBtnElem.textContent = "[goto]";
+                toMethodGoToElem.appendChild(toMethodGoToBtnElem);
+                toMethodNameElem.appendChild(toMethodGoToElem);
+                _mySidePanelContentElem.appendChild(toMethodNameElem);
+
+                const fromMethod = _methodMap.get(call.from)
+                _fromMethodName.innerHTML = `<b>From:</b> ${fromMethod.fullName}`;
+
+                const toMethod = _methodMap.get(call.to)
+                _toMethodName.innerHTML = `<b>To:</b> ${toMethod.fullName}`;
+
+                _execTypeElem.innerHTML = `<b>Call Type:</b> ${Array.from(call.execTypes).sort().reverse().join('/')}`;
+            }
+        }
+
+        function showMethodInfo(methodId) {
+            // content header
+            const methodInfoHeaderElem = document.createElement("div");
+            methodInfoHeaderElem.className = "panelHeader";
+            methodInfoHeaderElem.innerHTML = "<b>Method Info</b>";
+            _mySidePanelContentElem.appendChild(methodInfoHeaderElem);
+            // method name
+            const methodNameElem = document.createElement("div");
+            methodNameElem.className = "panelRow";
+            _methodNameElem = document.createElement("span");
+            _methodNameElem.style = "float:left;";
+            methodNameElem.appendChild(_methodNameElem);
+            const methodGoToElem = document.createElement("span");
+            methodGoToElem.style = "float:right;";
+            const methodGoToBtnElem = document.createElement("a");
+            methodGoToBtnElem.href = "javascript:void(0)";
+            methodGoToBtnElem.onclick = () => { focusGraph(); };
+            methodGoToBtnElem.textContent = "[goto]";
+            methodGoToElem.appendChild(methodGoToBtnElem);
+            methodNameElem.appendChild(methodGoToElem);
+            _mySidePanelContentElem.appendChild(methodNameElem);
+            // sample count
+            _sampleCountElem = document.createElement("div");
+            _sampleCountElem.className = "panelRow";
+            _mySidePanelContentElem.appendChild(_sampleCountElem);
+            _filterRowElemMap.set(_sampleCountOptionElem.value, _sampleCountElem);
+            // incoming calls
+            _incomingCallsElem = document.createElement("div");
+            _incomingCallsElem.className = "panelRow";           
+            _mySidePanelContentElem.appendChild(_incomingCallsElem);
+            _filterRowElemMap.set(_incomingOptionElem.value, _incomingCallsElem);
+            // outgoing calls
+            _outgoingCallsElem = document.createElement("div");
+            _outgoingCallsElem.className = "panelRow";
+            _mySidePanelContentElem.appendChild(_outgoingCallsElem);
+            _filterRowElemMap.set(_outgoingOptionElem.value, _outgoingCallsElem);
+            // method size (without inlines)
+            _methodSizeElem = document.createElement("div");
+            _methodSizeElem.className = "panelRow";
+            _mySidePanelContentElem.appendChild(_methodSizeElem);
+            // method size (with inlines)
+            _methodSizeWithInlinesElem = document.createElement("div");
+            _methodSizeWithInlinesElem.className = "panelRow";
+            _mySidePanelContentElem.appendChild(_methodSizeWithInlinesElem);
+            _filterRowElemMap.set(_methodSizeOptionElem.value, _methodSizeWithInlinesElem);
+            // inlines
+            _inlinedElem = document.createElement("div");
+            _inlinedElem.className = "panelRow";
+            _inlineLabelElem = document.createElement("span");
+            _inlineLabelElem.style = "float:left;";
+            _inlinedElem.appendChild(_inlineLabelElem);
+            const toggleInlineElem = document.createElement("span");
+            toggleInlineElem.style = "float:right;";
+            _toggleInlineBtnElem = document.createElement("a");
+            _toggleInlineBtnElem.href = "javascript:void(0)";
+            _toggleInlineBtnElem.onclick = () => { toggleInlines(); };
+            toggleInlineElem.appendChild(_toggleInlineBtnElem);
+            _inlinedElem.appendChild(toggleInlineElem);
+            _inlineListElem = document.createElement("ul");
+            _inlineListElem.className = "panelRow";
+            _inlineListElem.style = "clear:both;";
+            _inlinedElem.appendChild(_inlineListElem);
+            _mySidePanelContentElem.append(_inlinedElem);
+            _filterRowElemMap.set(_inlinedOptionElem.value, _inlinedElem);
+            // inlined into
+            _inlinedIntoElem = document.createElement("div");
+            _inlinedIntoElem.className = "panelRow";
+            _inlinedIntoLabelElem = document.createElement("span");
+            _inlinedIntoLabelElem.style = "float:left;";
+            _inlinedIntoElem.appendChild(_inlinedIntoLabelElem);
+            const toggleInlinedIntoElem = document.createElement("span");
+            toggleInlinedIntoElem.style = "float:right;";
+            _toggleInlinedIntoBtnElem = document.createElement("a");
+            _toggleInlinedIntoBtnElem.href = "javascript:void(0)";
+            _toggleInlinedIntoBtnElem.onclick = () => { toggleInlinedInto(); };
+            toggleInlinedIntoElem.appendChild(_toggleInlinedIntoBtnElem);
+            _inlinedIntoElem.appendChild(toggleInlinedIntoElem);
+            _inlinedIntoListElem = document.createElement("ul");
+            _inlinedIntoListElem.className = "panelRow";
+            _inlinedIntoListElem.style = "clear:both;";
+            _inlinedIntoElem.appendChild(_inlinedIntoListElem);
+            _mySidePanelContentElem.append(_inlinedIntoElem);
+            _filterRowElemMap.set(_inlinedIntoOptionElem.value, _inlinedIntoElem);
+
+            if (_methodMap.has(methodId)) { // display details about method
+                const method = _methodMap.get(methodId);
+                inNodeNameMap= new Map();
+                method.inCalls.forEach((edgeId) => {
+                    const call = _callMap.get(edgeId);
+                    const label = Array.from(call.execTypes).sort().reverse().join('/');
+                    if (!inNodeNameMap.has(label)) {
+                        inNodeNameMap.set(label,new Array());
+                    }
+                    inNodeNameMap.get(label).push(_methodMap.get(call.from).fullName);
+                });
+
+                let outNodeNameMap= new Map();
+                method.outCalls.forEach((edgeId) => {
+                    const call = _callMap.get(edgeId);
+                    const label = Array.from(call.execTypes).sort().reverse().join('/');
+                    if (!outNodeNameMap.has(label)) {
+                        outNodeNameMap.set(label,new Array());
+                    }
+                    outNodeNameMap.get(label).push(_methodMap.get(call.to).fullName);
+                   
+                });
+                
+
+                _methodNameElem.innerHTML = `<b>Name:</b> ${method.fullName}`;
+                _sampleCountElem.innerHTML = `<b>Sample Count:</b> ${method.sampleCount}`;
+                _incomingCallsElem.innerHTML = `<b>Total Incoming Edges:</b> ${method.inCalls.size}<br>`;
+               
+                inNodeNameMap.forEach((value, key) => {  
+                    incallListElem=document.createElement("ul");
+                    incallListElem.className="panelRow";
+                    incallListElem.style="clear:both;";
+
+                    _incominglistElm = document.createElement("span");
+                    _incominglistElm.style = "float:left;";
+                    //Add child as toggle button to this element
+                    const toggleInMethodsElem = document.createElement("span");
+                    toggleInMethodsElem.style = "float:right;";
+                    _toggleInMethodsBtnElem = document.createElement("a");
+                    _toggleInMethodsBtnElem.href = "javascript:void(0)";
+                    _toggleInMethodsBtnElem.id=key+"btn"+"In"
+                    toggleInMethodsElem.appendChild(_toggleInMethodsBtnElem);
+                    _incominglistElm.innerHTML = `<span style="font-weight:500;"> ${key}:</span>${value.length}`;
+                    incallListElem.appendChild(_incominglistElm);
+                    incallListElem.appendChild(toggleInMethodsElem);
+                    keyMethodNames=inNodeNameMap.get(key);
+                    if (keyMethodNames.length>0){      
+                        inKeyListelm=document.createElement("ul");
+                            inKeyListelm.className="panelRow";
+                            inKeyListelm.style="clear:both;";
+                            inKeyListelm.id=key+"In";
+                            _toggleInMethodsBtnElem.onclick = () => { toggleInMethods(key); };
+                            _toggleInMethodsBtnElem.textContent="[show]";
+                            inKeyListelm.style.display="none";
+                            keyMethodNames.forEach((methodFullName)=>{
+                                const _inKeyList = document.createElement("li");
+                                const inCallName=document.createElement("span");
+                                inCallName.style.float = "left";
+                                inCallName.style.paddingLeft = "5px";
+                                inCallName.textContent = methodFullName;
+                                _inKeyList.appendChild(inCallName);
+
+                                const gotoInID=_methodNameMap.get(methodFullName);
+                                if(_nodes.get(gotoInID)!=null){
+                                    const gotoInMethodElem = document.createElement("span");
+                                    gotoInMethodElem.style= "float:right;";
+                                    const gotoInMethodBtnElem = document.createElement("a");
+                                    methodNameElem.style.paddingRight = "5px";
+                                    gotoInMethodBtnElem.href = "javascript:void(0)";
+                                    gotoInMethodBtnElem.textContent = "[goto]";
+                                    gotoInMethodBtnElem.onclick = () => { openSidePanel(gotoInID); };
+                                    gotoInMethodElem.appendChild(gotoInMethodBtnElem);
+                                    _inKeyList.appendChild(gotoInMethodElem);
+                                }
+                                inKeyListelm.appendChild(_inKeyList);
+
+                        })
+                        
+                    incallListElem.appendChild(inKeyListelm);
+                    _incomingCallsElem.appendChild(incallListElem);
+                }
+            });
+
+                _outgoingCallsElem.innerHTML = `<b>Total Outgoing Edges:</b> ${method.outCalls.size}<br>`;
+
+                outNodeNameMap.forEach((value, key) => {  
+                    outcallListElem=document.createElement("ul");
+                    outcallListElem.className="panelRow";
+                    outcallListElem.style="clear:both;";
+
+                    _outgoinglistElm = document.createElement("span");
+                    _outgoinglistElm.style = "float:left;";
+                    //Add child as toggle button to this element
+                    const toggleOutMethodsElem = document.createElement("span");
+                    toggleOutMethodsElem.style = "float:right;";
+                    _toggleOutMethodsBtnElem = document.createElement("a");
+                    _toggleOutMethodsBtnElem.href = "javascript:void(0)";
+                    _toggleOutMethodsBtnElem.id=key+"btn"+"Out"
+                    toggleOutMethodsElem.appendChild(_toggleOutMethodsBtnElem);
+                    _outgoinglistElm.innerHTML = `<span style="font-weight:500;"> ${key}:</span> ${value.length}`;
+                    outcallListElem.appendChild(_outgoinglistElm);
+                    outcallListElem.appendChild(toggleOutMethodsElem);
+                    keyMethodNames=outNodeNameMap.get(key);
+                    if (keyMethodNames.length>0){     
+                        outKeyListelm=document.createElement("ul");
+                        outKeyListelm.className="panelRow";
+                        outKeyListelm.style="clear:both;";
+                        outKeyListelm.id=key+"Out";
+                            _toggleOutMethodsBtnElem.onclick = () => { toggleOutMethods(key); };
+                            _toggleOutMethodsBtnElem.textContent="[show]";
+                            outKeyListelm.style.display="none";
+                            keyMethodNames.forEach((methodFullName)=>{
+                                const _outKeyList = document.createElement("li");
+                                const outCallName=document.createElement("span");
+                                outCallName.style.float = "left";
+                                outCallName.style.paddingLeft = "5px";
+                                outCallName.textContent = methodFullName;
+                                _outKeyList.appendChild(outCallName);
+
+                                const gotoOutID=_methodNameMap.get(methodFullName);
+                                if(_nodes.get(gotoOutID)!=null){
+                                    const gotoOutMethodElem = document.createElement("span");
+                                    gotoOutMethodElem.style= "float:right;";
+                                    const gotoOutMethodBtnElem = document.createElement("a");
+                                    methodNameElem.style.paddingRight = "5px";
+                                    gotoOutMethodBtnElem.href = "javascript:void(0)";
+                                    gotoOutMethodBtnElem.textContent = "[goto]";
+                                    gotoOutMethodBtnElem.onclick = () => { openSidePanel(gotoOutID); };
+                                    gotoOutMethodElem.appendChild(gotoOutMethodBtnElem);
+                                    _outKeyList.appendChild(gotoOutMethodElem);
+                                }
+                                outKeyListelm.appendChild(_outKeyList);
+
+                        })
+                        
+                    outcallListElem.appendChild(outKeyListelm);
+                    _outgoingCallsElem.appendChild(outcallListElem);
+                }
+            });
+
+                _methodSizeElem.innerHTML = `<b>Size:</b> ${method.withoutInlineSize} bytes`;
+                _methodSizeWithInlinesElem.innerHTML = `<b>Size with Inlines:</b> ${method.withInlineSize} bytes`;
+                let inlinedMethods = getInlinedNamesList(_focusedId);
+                if (inlinedMethods.length > 0) {
+                    if (method.displayInlines) {
+                        _inlineListElem.style.display = "block";
+                        _toggleInlineBtnElem.textContent = "[hide]";
+                        inlinedMethods.forEach((methodFullName) => {
+                            const inlineListEntry = document.createElement("li");
+                            inlineListEntry.textContent = methodFullName;
+                            _inlineListElem.appendChild(inlineListEntry);
+                        });
+                    } else {
+                        _inlineListElem.style.display = "none";
+                        _toggleInlineBtnElem.textContent = "[show]";
+                    }
+                    _inlineLabelElem.innerHTML = `<b>Inlines:</b> ${inlinedMethods.length}`;
+                } else {
+                    _toggleInlineBtnElem.textContent = "";
+                    _inlineLabelElem.innerHTML = "<b>Inlines:</b> None";
+                    _methodSizeWithInlinesElem.remove();
+                    _filterRowElemMap.set(_methodSizeOptionElem.value, _methodSizeElem);
+                }
+                if (method.inlinedInto.size > 0) {
+                    _toggleInlinedIntoBtnElem.textContent = "[show]";
+                    _inlinedIntoListElem.style.display = "none";
+                    _inlinedIntoLabelElem.innerHTML = `<b>Inlined into:</b> ${method.inlinedInto.size}`;
+                } else {
+                    _toggleInlinedIntoBtnElem.textContent = "";
+                    _inlinedIntoLabelElem.innerHTML = "<b>Inlined into:</b> None"
+                }
+            } else if (_inlineMethodMap.has(methodId)) {
+                const inlineMethod = _inlineMethodMap.get(methodId);
+                _methodNameElem.innerHTML = `<b>Name:</b> ${inlineMethod.fullName}`;
+                _methodSizeElem.innerHTML = `<b>Size:</b> ${inlineMethod.withoutInlineSize} bytes`;
+                _methodSizeWithInlinesElem.innerHTML = `<b>Size with Inlines:</b> ${inlineMethod.withInlineSize} bytes`;
+                _sampleCountElem.innerHTML = '<b>Sample Count:</b> N/A';
+                _incomingCallsElem.innerHTML = '<b>Total Incoming Edges:</b> N/A';
+                _outgoingCallsElem.innerHTML = '<b>Total Outgoing Edges:</b> N/A';
+                _inlineListElem.textContent = '';
+                _toggleInlineBtnElem.textContent = '';
+                _inlineLabelElem.innerHTML = '<b>Inlines:</b> N/A';
+                _inlinedIntoLabelElem.innerHTML = "<b>Inlined into:</b> N/A";
+            }
+        }
+
+        function highlightFilterInfo() {
+            let rowElem = _filterRowElemMap.get(_filterSelectElem.value);
+            if (rowElem !== undefined) {
+                if (_filterRowElem !== undefined) {
+                    _filterRowElem.className = "panelRow";
+                }
+                rowElem.className = "panelRow filterRow";
+                _filterRowElem = rowElem;
+            }
+        }
+
+        function openSidePanel(id) {
+            let isNode = _nodes.get(id) != null;
+            if (_mySidePanelElem.style.width !== "0%")
+                focusGraph(id);
+            if (id == _focusedId)
+                return;
+            _focusedId = id;
+            _mySidePanelElem.style.width = "39.85%";
+            _resizeElm.style.width = "0.15%";
+            _resizeElm.style.right = _mySidePanelElem.style.width
+            _containerElem.style.width = "60%";
+            _overlayCanvasElem.style.width = "60%";
+
+
+            function initResizerFn(resizer, sidebar, main) {
+                let startX, startWidth, totalWidth;
+                const minWidthSidebarPercent = 25; // min width of sidepanel
+                const minWidthMainPercent = 40; // min width of main content
+
+                function onMouseMove(e) {
+                    const dx = e.clientX - startX;
+                    const newSidebarWidthPercent = ((startWidth - dx) / totalWidth) * 100;
+                    const newMainWidthPercent = 100 - newSidebarWidthPercent - 0.15;
+                    if (newSidebarWidthPercent >= minWidthSidebarPercent && newMainWidthPercent >= minWidthMainPercent) {
+                        sidebar.style.width = `${newSidebarWidthPercent}%`;
+                        resizer.style.right = `${newSidebarWidthPercent}%`;
+                        main.style.width = `${newMainWidthPercent}%`;
+
+                        _overlayCanvasElem.style.width = `${newMainWidthPercent}%`;
+                    }
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener("mousemove", onMouseMove);
+                    document.removeEventListener("mouseup", onMouseUp);
+                }
+
+                function onMouseDown(e) {
+                    startX = e.clientX;
+                    totalWidth = sidebar.offsetWidth + main.offsetWidth;
+                    startWidth = sidebar.offsetWidth;
+                    document.addEventListener("mousemove", onMouseMove);
+                    document.addEventListener("mouseup", onMouseUp);
+                }
+
+                resizer.addEventListener("mousedown", onMouseDown);
+            }
+
+            initResizerFn(_resizeElm, _mySidePanelElem, _containerElem);
+
+            clearSidePanel();
+            if (isNode) {
+                showMethodInfo(id);
+            } else {
+                showCallInfo(id);
+            }
+            highlightFilterInfo();
+            _network.redraw();
+        }
+
+        function toggleInMethods(key) {
+            element=document.getElementById(key+"In");
+            btn=document.getElementById(key+"btn"+"In")
+            if (element.style.display === "none" && btn.textContent=="[show]") {
+                element.style.display = "block";
+                btn.textContent="[hide]"
+            } 
+            else {
+                element.style.display = "none";
+                btn.textContent="[show]"
+            }
+        }
+        function toggleOutMethods(key) {
+            element=document.getElementById(key+"Out");
+            btn=document.getElementById(key+"btn"+"Out")
+            if (element.style.display === "none" && btn.textContent=="[show]") {
+                element.style.display = "block";
+                btn.textContent="[hide]"
+            } 
+            else {
+                element.style.display = "none";
+                btn.textContent="[show]"
+            }
+        }
+
+        function toggleInlines() {
+            if (_methodMap.has(_focusedId) && _methodMap.get(_focusedId).inlinedCalls.size > 0) {
+                if (_inlineListElem.childElementCount > 0) {
+                    _toggleInlineBtnElem.textContent = `[show]`;
+                    _inlineListElem.innerHTML = '';
+                    _inlineListElem.style.display = "none";
+                } else {
+                    _toggleInlineBtnElem.textContent = `[hide]`;
+                    let inlinedMethods = getInlinedNamesList(_focusedId);
+                    _inlineListElem.style.display = "block";
+                    inlinedMethods.forEach((methodFullName) => {
+                        const inlineListEntry = document.createElement("li");
+                        const methodNameElem = document.createElement("span");
+                        methodNameElem.style.float = "left";
+                        methodNameElem.style.paddingLeft = "5px";
+                        methodNameElem.textContent = methodFullName;
+                        inlineListEntry.append(methodNameElem);
+                        const gotoId = _methodNameMap.get(methodFullName);
+                        if (_nodes.get(gotoId) != null) {
+                            // only create goto button if method is shown
+                            const gotoMethodElem = document.createElement("span");
+                            const gotoMethodBtnElem = document.createElement("a");
+                            gotoMethodElem.style.float = "right";
+                            methodNameElem.style.paddingRight = "5px";
+                            gotoMethodBtnElem.href = "javascript:void(0)";
+                            gotoMethodBtnElem.textContent = "[goto]";
+                            gotoMethodBtnElem.onclick = () => { openSidePanel(gotoId); };
+                            gotoMethodElem.appendChild(gotoMethodBtnElem);
+                            inlineListEntry.appendChild(gotoMethodElem);
+                        }
+                        _inlineListElem.appendChild(inlineListEntry);
+                    });
+                }
+            }
+        }
+
+        function toggleInlinedInto() {
+            if (_methodMap.has(_focusedId) && _methodMap.get(_focusedId).inlinedInto.size > 0) {
+                if (_inlinedIntoListElem.childElementCount > 0) {
+                    _toggleInlinedIntoBtnElem.textContent = `[show]`;
+                    _inlinedIntoListElem.innerHTML = '';
+                    _inlinedIntoListElem.style.display = "none";
+                } else {
+                    _toggleInlinedIntoBtnElem.textContent = `[hide]`;
+                    _inlinedIntoListElem.style.display = "block";
+                    _methodMap.get(_focusedId).inlinedInto.forEach((methodFullName) => {
+                        const inlineIntoEntry = document.createElement("li");
+                        const methodNameElem = document.createElement("span");
+                        methodNameElem.style.float = "left";
+                        methodNameElem.style.paddingLeft = "5px";
+                        methodNameElem.textContent = methodFullName;
+                        inlineIntoEntry.append(methodNameElem);
+                        const gotoId = _methodNameMap.get(methodFullName);
+                        if (_nodes.get(gotoId) != null) {
+                            const gotoMethodElem = document.createElement("span");
+                            const gotoMethodBtnElem = document.createElement("a");
+                            gotoMethodElem.style.float = "right";
+                            methodNameElem.style.paddingRight = "5px";
+                            gotoMethodBtnElem.href = "javascript:void(0)";
+                            gotoMethodBtnElem.textContent = "[goto]";
+                            gotoMethodBtnElem.onclick = () => { openSidePanel(gotoId); };
+                            gotoMethodElem.appendChild(gotoMethodBtnElem);
+                            inlineIntoEntry.appendChild(gotoMethodElem);
+                        }
+                        _inlinedIntoListElem.appendChild(inlineIntoEntry);
+                    });
+                }
+            }
+        }
+
+        function hideInlines(methodId) {
+            let deactivateNodes = new Set();
+            let deactivateEdges = new Set();
+            function traverseInlines(currMethod) {
+                currMethod.inlinedCalls.forEach(edgeId => {
+                    const edge = _inlineCallMap.get(edgeId);
+                    deactivateEdges.add(edgeId);
+                    const inlineChild = _inlineMethodMap.get(edge.to);
+                    if (deactivateNodes.has(inlineChild.id)) {
+                        return;
+                    }
+                    deactivateNodes.add(inlineChild.id);
+                    traverseInlines(inlineChild);
+                });
+            }
+            const method = _methodMap.get(methodId);
+            if (!method.displayInlines)
+                return;
+            traverseInlines(method);
+            method.displayInlines = false;
+            _nodes.remove(Array.from(deactivateNodes));
+            _edges.remove(Array.from(deactivateEdges));
+            updateSelfReferenceSize(methodId);
+        }
+
+        function displayInlines(methodId) {
+            let activateNodes = new Set();
+            let activateEdges = new Set();
+            function traverseInlines(currMethod) {
+                currMethod.inlinedCalls.forEach(edgeId => {
+                    const edge = _inlineCallMap.get(edgeId);
+                    activateEdges.add(edgeId);
+                    const inlineChild = _inlineMethodMap.get(edge.to);
+                    if (activateNodes.has(inlineChild.id)) {
+                        return;
+                    }
+                    activateNodes.add(inlineChild.id);
+                    traverseInlines(inlineChild);
+                });
+            }
+            const method = _methodMap.get(methodId);
+            if (method.displayInlines)
+                return;
+            traverseInlines(method);
+            method.displayInlines = true;
+            let activateNodeObjects = [];
+            activateNodes.forEach((nodeId) => {
+                activateNodeObjects.push(_inlineMethodMap.get(nodeId));
+            });
+            _nodes.add(activateNodeObjects);
+            let activateEdgeObjects = [];
+            activateEdges.forEach((edgeId) => {
+                const edge = _inlineCallMap.get(edgeId);
+                activateEdgeObjects.push(edge);
+            });
+            _edges.add(activateEdgeObjects);
+            updateSelfReferenceSize(method.id);
+        }
+
+        function updateFilterBoundaries() {
+            let maxValueMap = _filterExtraOnlyElem.checked ? _maxValueMapExtra : _maxValueMap;
+            let maxValue = maxValueMap.get(_filterSelectElem.value);
+            _filterSliderElem.max = maxValue;
+            _filterSliderElem.value = maxValue;
+            _filterInputElem.value = maxValue;
+        }
+
+        function updateNodeSizes() {
+            const MAX = _maxValueMap.get(_filterSelectElem.value);
+            const MIN = _minValueMap.get(_filterSelectElem.value);
+            const SCALE_FACTOR = (MAX_NODE_SIZE - MIN_NODE_SIZE) / (MAX - MIN);
+            _methodMap.forEach(method => {
+                const sizeValue = calcFilterValue(method.id);
+                const normalizedSize = MIN_NODE_SIZE + SCALE_FACTOR * ((sizeValue - MIN));
+                method.size = normalizedSize;
+            });
+        }
+
+        function getInlinedNamesList(methodId) {
+            function collect(method, names) {
+                method.inlinedCalls.forEach((edgeId) => {
+                    const edge = _inlineCallMap.get(edgeId);
+                    const inlineMethod = _inlineMethodMap.get(edge.to);
+                    names.push(inlineMethod.fullName);
+                    collect(inlineMethod, names);
+                });
+
+            }
+            const method = _methodMap.get(methodId);
+            if (method._inlinedNamesList === undefined) {
+                // cache results in method object
+                method._inlinedNamesList = new Array();
+                collect(method, method._inlinedNamesList);
+                method._inlinedNamesList.sort();
+            }
+            return method._inlinedNamesList;
+        }
+
+        function isMethodCompiledExtra(methodId) {
+            const method = _methodMap.get(methodId);
+            if (method === undefined) {
+                return false;
+            } else if (method._isExtra !== undefined) {
+                return method._isExtra;
+            }
+            let inlineCount = 0;
+            let compiledCall = 0;
+            method.inCalls.forEach((callId) => {
+                const call = _callMap.get(callId);
+                const fromNode = _methodMap.get(call.from);
+                if (call.execTypes.has("compiled")) {
+                    compiledCall += 1;
+                    let inlinedMethods = getInlinedNamesList(fromNode.id);
+                    if (inlinedMethods.includes(method.fullName)
+                        && method.fullName != fromNode.fullName) { // ignore recursive calls
+                        inlineCount += 1;
+                    }
+                }
+            });
+            // cache result in method object
+            const EXTRA_THRESHOLD = 0.99;
+            method._isExtra = compiledCall > 0 && inlineCount / compiledCall >= EXTRA_THRESHOLD;
+            return method._isExtra;
+        }
+
+        function isMethodCompiledEventually(methodId) {
+            const method = _methodMap.get(methodId);
+            if (method._isCompiled !== undefined) {
+                return method._isCompiled;
+            } else if (method.inlinedCalls.size > 0) {
+                return true;
+            }
+            let isCompiled = false;
+            method.inCalls.forEach((callId) => {
+                if (isCompiled)
+                    return;
+                const call = _callMap.get(callId);
+                if (call.execTypes.has("compiled")) {
+                    isCompiled = true;
+                }
+            });
+            method._isCompiled = isCompiled;
+            return isCompiled;
+        }
+
+        function meetsFilterThreshold(methodId) {
+            if (_filterExtraOnlyElem.checked && !isMethodCompiledExtra(methodId)) {
+                return false;
+            }
+            return calcFilterValue(methodId) >= _filterSliderElem.value;
+        }
+
+        function calcFilterValue(methodId) {
+            const method = _methodMap.get(methodId);
+            if (method == null) {
+                return -1;
+            }
+            if (_filterSelectElem.value == _sampleCountOptionElem.value) {
+                return method.sampleCount;
+            } else if (_filterSelectElem.value == _incomingOptionElem.value
+                || _filterSelectElem.value == _outgoingOptionElem.value) {
+                let key = _filterSelectElem.value == "incoming" ? "inCalls" : "outCalls";
+                let val = 0;
+                method[key].forEach((edgeId) => {
+                    // TODO: maybe filter by execType of edge object
+                    val += 1;
+                });
+                return val;
+            } else if (_filterSelectElem.value == _methodSizeOptionElem.value) {
+                return method.withInlineSize;
+            } else if (_filterSelectElem.value == _inlinedOptionElem.value) {
+                return getInlinedNamesList(method.id).length;
+            } else if (_filterSelectElem.value == _inlinedIntoOptionElem.value) {
+                return method.inlinedInto.size;
+            }
+            return -1;
+        }
+
+        function applyFilter(autoFocus = true) {
+            function getFilterList() {
+                if (_filterSelectElem.value == _incomingOptionElem.value) {
+                    return [{ edgeSetKey: "inCalls", callKey: "from" },];
+                } else if (_filterSelectElem.value == _outgoingOptionElem.value) {
+                    return [{ edgeSetKey: "outCalls", callKey: "to" },];
+                } else {
+                    return [
+                        { edgeSetKey: "inCalls", callKey: "from" },
+                        { edgeSetKey: "outCalls", callKey: "to" },
+                    ];
+                }
+            }
+
+            console.log("applying filter...");
+            let meetThresholdCount = 0;
+            const activateNodes = new Set();
+            const activateEdges = new Set();
+            const filterList = getFilterList();
+            _nodes.clear();
+            _edges.clear();
+            _activeHorizontalEdges.clear();
+            _methodMap.forEach((method, methodId) => {
+                if (meetsFilterThreshold(methodId)) {
+                    meetThresholdCount++;
+                    activateNodes.add(methodId);
+                    filterList.forEach((filter) => {
+                        method[filter.edgeSetKey].forEach(callId => {
+                            if (_edges.get(callId) == null) {
+                                activateEdges.add(callId)
+                            }
+                            let call = _callMap.get(callId);
+                            if (_nodes.get(call[filter.callKey]) == null) {
+                                activateNodes.add(call[filter.callKey]);
+                            }
+                        });
+                    });
+                }
+            });
+            // activate nodes
+            const activateNodeObjects = new Array();
+            activateNodes.forEach((nodeId) => {
+                const method = _methodMap.get(nodeId);
+                const extra = isMethodCompiledExtra(nodeId);
+                const isCompiled = isMethodCompiledEventually(nodeId);
+                const shape = extra ? EXTRA_SHAPE : isCompiled ? "diamond" : DEFAULT_SHAPE;
+                const color = extra ? EXTRA_COLOR : DEFAULT_COLOR;
+                const opacity = meetsFilterThreshold(nodeId) ? OVER_THRESH_OPACITY : UNDER_THRESH_OPACITY;
+                activateNodeObjects.push({
+                    id: method.id,
+                    level: method.level,
+                    size: method.size,
+                    title: method.fullName + (method.inlinedCalls.size == 0 ? "" : "\n(double-click to toggle inlines)"),
+                    fullName: method.fullName,
+                    shape: shape,
+                    color: color,
+                    shapeProperties: method.inlinedCalls.size > 0 ? { borderDashes: [5, 5] } : null,
+                    opacity: opacity,
+                });
+            });
+            _nodes.add(activateNodeObjects);
+            // activate edges
+            const activateEdgeObjects = new Array();
+            activateEdges.forEach((edgeId) => {
+                const call = _callMap.get(edgeId);
+                const toNode = _methodMap.get(call.to);
+                if (isMethodCompiledExtra(call.to) && call.execTypes.has("compiled")) {
+                    call.color = EXTRA_COLOR;
+                    call.dashes = [5, 5];
+                } else {
+                    call.color = DEFAULT_COLOR;
+                }
+                call.opacity = 1;
+                const fromNode = _methodMap.get(call.from);
+                if (toNode.depth == fromNode.depth && toNode.id != fromNode.id) {
+                    // draw horizontal edge labels ourselves because vis.js doesn't 
+                    // update label position properly
+                    call.label = undefined;
+                    _activeHorizontalEdges.add(call.id);
+                }
+                activateEdgeObjects.push(call);
+            });
+            _edges.add(activateEdgeObjects);
+            console.log("applied filter!");
+            console.log("# edges: ", _edges.length);
+            console.log("# nodes: ", _nodes.length);
+            let p = meetThresholdCount / _methodMap.size;
+            let log10 = p ? Math.floor(Math.log10(p)) : 0
+            let div = log10 < 0 ? Math.pow(10, 1 - log10) : 100;
+            p = Math.round(p * div) / div;
+            _filterStatusElem.textContent = `${meetThresholdCount} of ${_methodMap.size} (${p * 100}%)`;
+            if (autoFocus) {
+                if (_nodes.get(_focusedId) == null && _edges.get(_focusedId) == null) {
+                    closeSidePanel();
+                }
+                focusGraph();
+            }
+        }
+
+        function rotateEdges() {
+            let updateEdgeObjects = new Array();
+            _edges.forEach((edge) => {
+                if (_nodes.get(edge.from) == null || _nodes.get(edge.to) == null)
+                    return;
+                const fromNode = _nodes.get(edge.from);
+                const toNode = _nodes.get(edge.to);
+                const fromPosition = _network.getPosition(edge.from);
+                const toPosition = _network.getPosition(edge.to);
+                if (fromPosition == null || toPosition == null)
+                    return;
+                const call = _callMap.has(edge.id) ? _callMap.get(edge.id) : _inlineCallMap.get(edge.id);
+                let edgeType = fromPosition.x > toPosition.x ? "curvedCCW" : "curvedCW";
+                if (toNode.level > fromNode.level)
+                    edgeType = fromPosition.x < toPosition.x ? "curvedCCW" : "curvedCW";;
+                if (call.smooth == null || call.smooth.type != edgeType) {
+                    call.smooth = {
+                        enabled: true,
+                        forceDirection: true,
+                        roundness: _options.edges.smooth.roundness,
+                        type: edgeType,
+                    };
+                    updateEdgeObjects.push(call);
+                }
+            });
+            _edges.updateOnly(updateEdgeObjects);
+        }
+
+        function drawOverlay() {
+
+            _legendElm.innerHTML='<ul class="legend"><li><span class="circle"></span> Interpreted</li><li><span class="diamond"></span> Compiled</li><li><span class="hex"></span> "Extra"</li><li><span class="square"></span>Inlined</li></ul>'
+            // resize overlay canvas in case the continer has changed and configure other properties
+            _overlayCanvasElem.height = _myNetworkElem.clientHeight;
+            _overlayCanvasElem.width = _myNetworkElem.clientWidth;
+            _overlayContext.textAlign = OVERLAY_TEXT_ALIGN;
+            _overlayContext.textBaseline = OVERLAY_TEXT_BASELINE;
+            _overlayContext.font = `${OVERLAY_FONT_SIZE}pt ${OVERLAY_FONT_TYPE}`;
+            _overlayContext.lineWidth = OVERLAY_LINE_WIDTH;
+            _overlayContext.fillStyle = OVERLAY_FONT_COLOR;
+            _overlayContext.strokeStyle = OVERLAY_LINE_COLOR;
+            // clear any existing lines from overlay canvas
+            _overlayContext.clearRect(0, 0, _overlayCanvasElem.width, _overlayCanvasElem.height);
+            // current scale factor for the overlay based on scale of network
+            const scale = _network.getScale();
+            _overlayContext.scale(scale, scale);
+            _overlayContext.beginPath();
+            _activeHorizontalEdges.forEach((edgeId) => {
+                const call = _callMap.get(edgeId);
+                if (call == null || _nodes.get(call.from) == null || _nodes.get(call.to) == null)
+                    return;
+                const fromPosition = _network.getPosition(call.from);
+                const toPosition = _network.getPosition(call.to);
+                if (fromPosition == null || toPosition == null)
+                    return;
+                let startPos = _network.canvasToDOM(fromPosition);
+                startPos.x /= scale;
+                startPos.y /= scale;
+                let endPos = _network.canvasToDOM(toPosition);
+                endPos.x /= scale;
+                endPos.y /= scale;
+                const label = Array.from(call.execTypes).sort().reverse().join('/');
+                const roundness = _options.edges.smooth.roundness;
+                const offset = (Math.abs(startPos.x - endPos.x) / 2 * Math.tan(roundness * Math.PI / 4) + OVERLAY_FONT_SIZE) * (1.15); // magic number for scaling                
+                _overlayContext.fillText(label, (startPos.x + endPos.x) / 2, startPos.y - offset);
+            });
+            _nodes.forEach((node) => {
+                const nodePos = _network.canvasToDOM(_network.getPosition(node.id));
+                nodePos.x /= scale;
+                nodePos.y /= scale;
+                const label = node.fullName.length <= MAX_LABEL_LENGTH ? node.fullName : `${node.fullName.substring(0, MAX_LABEL_LENGTH)}...`;
+                if (meetsFilterThreshold(node.id)) {
+                    _overlayContext.fillStyle = OVER_THRESH_FONT_COLOR;
+                } else {
+                    _overlayContext.fillStyle = UNDER_THRESH_FONT_COLOR;
+                }
+                _overlayContext.fillText(label, nodePos.x, nodePos.y);
+            });
+            _overlayContext.stroke();
+        }
+
+        function createGraph(jsonData) { // drawGraph from ref.html
+            function calcDepth(method, depth, visited) {
+                if (method === undefined || visited.has(method.id)) {
+                    return; // reached a visited node; stop
+                }
+                method.depth = ((method.depth == undefined) ? depth : Math.min(method.depth, depth));
+                method.level = method.depth;
+                visited.add(method.id);
+                method.outCalls.forEach((callId) => {
+                    calcDepth(_methodMap.get(_callMap.get(callId).to), depth + 1, visited);
+                });
+            }
+            function processInlines(method) {
+                let indexMap = new Map();
+                let inlineSet = new Set();
+                indexMap.set(-1, method);
+                method.inlines.forEach(inline => {
+                    inlineSet.add(inline.callee);
+                    const caller = indexMap.get(inline.callerIndex);
+                    const calleeId = `i${_inlineMethodMap.size}`;
+                    const calleeMethod = _methodMap.get(inline.callee);
+                    const callerMethod = _methodMap.get(inline.caller);
+                    // create a new callee for every inline
+                    const fullName = `${calleeMethod.className}.${calleeMethod.methodName}${calleeMethod.methodDescriptor}`;
+                    const callee = {
+                        id: calleeId,
+                        fullName: fullName,
+                        title: fullName,
+                        level: caller.depth + 1,
+                        depth: caller.depth + 1,
+                        size: parseInt(inline.size),
+                        withInlineSize: parseInt(inline.size),
+                        shape: INLINE_SHAPE,
+                        color: INLINE_COLOR,
+                        outCalls: new Set(),
+                        inCalls: new Set(),
+                        inlinedCalls: new Set(),
+                    };
+                    _minMethodSize = Math.min(_minMethodSize, callee.size);
+                    _inlineMethodMap.set(calleeId, callee);
+                    indexMap.set(inline.calleeIndex, callee);
+                    const inlineCallId = `${caller.id}>${callee.id}`;
+                    _inlineCallMap.set(inlineCallId, {
+                        id: inlineCallId,
+                        from: caller.id,
+                        to: callee.id,
+                        arrows: "to",
+                        label: `inlined@${inline.callSite}`,
+                        dashes: [10, 3],
+                        color: INLINE_COLOR,
+                    });
+                    caller.inlinedCalls.add(inlineCallId);
+                });
+                function calcWithInlineSize(currMethod) {
+                    currMethod.inlinedCalls.forEach(inlineCallId => {
+                        const inlineCall = _inlineCallMap.get(inlineCallId);
+                        const inlineCallee = _inlineMethodMap.get(inlineCall.to);
+                        const calleeMethod = _methodMap.get(_methodNameMap.get(inlineCallee.fullName));
+                        if (calleeMethod != null)
+                            calleeMethod.inlinedInto.add(method.fullName);
+                        currMethod.withInlineSize += calcWithInlineSize(_inlineMethodMap.get(inlineCall.to));
+                    });
+                    return currMethod.withInlineSize;
+                }
+                calcWithInlineSize(method);
+                _maxMethodSize = Math.max(_maxMethodSize, method.withInlineSize);
+                method.inlineSet = inlineSet;
+            }
+
+            console.log("processing json data...");
+            // process methods
+            jsonData.methods.forEach(method => {
+                const size = parseInt(method.metrics[0].value)
+                _maxMethodSize = Math.max(_maxMethodSize, size);
+                _minMethodSize = Math.min(_minMethodSize, size);
+                method.withInlineSize = size;
+                method.withoutInlineSize = size;
+                method.displayInlines = false;
+                method.fullName = `${method.className}.${method.methodName}${method.methodDescriptor}`;
+                method.title = method.fullName;
+                method.label = undefined;
+                method.inCalls = new Set(); // set of incoming call ids
+                method.outCalls = new Set(); // set of outgoing call ids
+                method.inlinedCalls = new Set(); // set of inlined call ids
+                method.inlinedInto = new Set(); // set of names of methods that inlined this one
+                method._inlinedNamesList = undefined; // cached later; leave undefined initially
+                method._isExtra = undefined; // cached later; leave undefined initially
+                _methodMap.set(method.id, method);
+                _methodNameMap.set(method.fullName, method.id);
+            });
+            // process calls
+            let q = new Array();
+            jsonData.paths.forEach(root => {
+                q.push([root, null]);
+                while (q.length > 0) {
+                    let entry = q.shift();
+                    let parent = entry[1];
+                    let child = entry[0];
+                    if (parent !== null) {
+                        const callId = `${parent.id}>${child.id}`;
+                        let execType = child.execType;
+                        if (_callMap.has(callId)) {
+                            const call = _callMap.get(callId);
+                            call.execTypes.add(execType);
+                            call.label = Array.from(call.execTypes).sort().reverse().join('/');
+                        } else {
+                            _callMap.set(callId, {
+                                id: callId,
+                                from: parent.id,
+                                to: child.id,
+                                execTypes: new Set([execType]),
+                                label: execType,
+                                arrows: {
+                                    to: {
+                                        enabled: parent.id != child.id,
+                                    }
+                                }
+                            });
+                        }
+                        const caller = _methodMap.get(parent.id);
+                        caller.outCalls.add(callId);
+                        const callee = _methodMap.get(child.id);
+                        callee.inCalls.add(callId);
+                    }
+                    child.children.forEach(grandChild => {
+                        q.push([grandChild, child]);
+                    });
+                }
+            });
+            // calculate depth to position nodes
+            _methodMap.forEach((method) => {
+                if (method.inCalls.size == 0) {
+                    calcDepth(method, 0, new Set());
+                }
+            });
+            // needs to happen after depth calculation is complete
+            // for all nodes
+            _methodMap.forEach((method) => {
+                // determine method size with inlines included
+                // and cache inlining relationships
+                processInlines(method);
+            });
+            function updateMaxValueMap(map, key, candidateValue) {
+                if (!map.has(key))
+                    map.set(key, 0);
+                map.set(key, Math.max(map.get(key), candidateValue));
+            }
+            function updateMinValueMap(map, key, candidateValue) {
+                if (!map.has(key))
+                    map.set(key, 9999999);
+                map.set(key, Math.min(map.get(key), candidateValue));
+            }
+            _methodMap.forEach((method) => {
+                const inlinedMethods = getInlinedNamesList(method.id);
+                // determine max/min value for node attributes
+                updateMaxValueMap(_maxValueMap, _sampleCountOptionElem.value, method.sampleCount);
+                updateMaxValueMap(_maxValueMap, _incomingOptionElem.value, method.inCalls.size);
+                updateMaxValueMap(_maxValueMap, _outgoingOptionElem.value, method.outCalls.size);
+                updateMaxValueMap(_maxValueMap, _methodSizeOptionElem.value, method.withInlineSize);
+                updateMaxValueMap(_maxValueMap, _inlinedOptionElem.value, inlinedMethods.length);
+                updateMaxValueMap(_maxValueMap, _inlinedIntoOptionElem.value, method.inlinedInto.size);
+                updateMinValueMap(_minValueMap, _sampleCountOptionElem.value, method.sampleCount);
+                updateMinValueMap(_minValueMap, _incomingOptionElem.value, method.inCalls.size);
+                updateMinValueMap(_minValueMap, _outgoingOptionElem.value, method.outCalls.size);
+                updateMinValueMap(_minValueMap, _methodSizeOptionElem.value, method.withInlineSize);
+                updateMinValueMap(_minValueMap, _inlinedOptionElem.value, inlinedMethods.length);
+                updateMinValueMap(_minValueMap, _inlinedIntoOptionElem.value, method.inlinedInto.size);
+                if (isMethodCompiledExtra(method.id)) {
+                    updateMaxValueMap(_maxValueMapExtra, _sampleCountOptionElem.value, method.sampleCount);
+                    updateMaxValueMap(_maxValueMapExtra, _incomingOptionElem.value, method.inCalls.size);
+                    updateMaxValueMap(_maxValueMapExtra, _outgoingOptionElem.value, method.outCalls.size);
+                    updateMaxValueMap(_maxValueMapExtra, _methodSizeOptionElem.value, method.withInlineSize);
+                    updateMaxValueMap(_maxValueMapExtra, _inlinedOptionElem.value, inlinedMethods.length);
+                    updateMaxValueMap(_maxValueMapExtra, _inlinedIntoOptionElem.value, method.inlinedInto.size);
+                    updateMinValueMap(_minValueMapExtra, _sampleCountOptionElem.value, method.sampleCount);
+                    updateMinValueMap(_minValueMapExtra, _incomingOptionElem.value, method.inCalls.size);
+                    updateMinValueMap(_minValueMapExtra, _outgoingOptionElem.value, method.outCalls.size);
+                    updateMinValueMap(_minValueMapExtra, _methodSizeOptionElem.value, method.withInlineSize);
+                    updateMinValueMap(_minValueMapExtra, _inlinedOptionElem.value, inlinedMethods.length);
+                    updateMinValueMap(_minValueMapExtra, _inlinedIntoOptionElem.value, method.inlinedInto.size);
+                    _extraCount++;
+                }
+            });
+            _inlineMethodMap.forEach((method) => {
+                method.withoutInlineSize = method.size;
+                method.size = MIN_NODE_SIZE + (MAX_NODE_SIZE - MIN_NODE_SIZE) * (method.size - _minMethodSize) / (_maxMethodSize - _minMethodSize);
+            });
+            console.log("processed json data!");
+            _extraOnlyLabelElem.textContent = `"Extra" Only (${_extraCount})`
+            // create vis.js network
+            _network = new vis.Network(_myNetworkElem, { nodes: _nodes, edges: _edges }, _options);
+            updateFilterBoundaries();
+            updateNodeSizes();
+            applyFilter();
+            // register events for network
+            _network.on("click", (properties) => {
+                if (_clickTimeoutId !== undefined)
+                    clearTimeout(_clickTimeoutId);
+                _clickTimeoutId = setTimeout(() => {
+                    const nodeIds = properties.nodes; // 'click' event returns list of ids instead of single id
+                    const edgeIds = properties.edges;
+                    const node = _nodes.get(nodeIds)[0];
+                    const edge = _edges.get(edgeIds)[0];
+                    if (node !== undefined && _methodMap.get(node.id) !== undefined) {
+                        openSidePanel(node.id);
+                    } else if (edge !== undefined && _callMap.get(edge.id) !== undefined) {
+                        openSidePanel(edge.id);
+                    }
+                    _clickTimeoutId = undefined;
+                }, 500);
+            });
+            _network.on("doubleClick", (properties) => {
+                if (_clickTimeoutId !== undefined) {
+                    clearTimeout(_clickTimeoutId);
+                }
+                const nodeIds = properties.nodes; // 'doubleClick' event returns list of ids instead of single id
+                const edgeIds = properties.edges;
+                const node = _nodes.get(nodeIds)[0];
+                const edge = _edges.get(edgeIds)[0];
+                if (node !== undefined && _methodMap.get(node.id) !== undefined) {
+                    const method = _methodMap.get(node.id);
+                    if (method.displayInlines) {
+                        hideInlines(method.id);
+                    } else {
+                        displayInlines(method.id);
+                    }
+                    _network.focus(method.id, { animation: false, scale: 1.25 });
+                }
+            });
+            _network.on("hoverNode", (properties) => {
+                
+                const id = properties.node;
+                const node = _nodes.get(id);
+                const method = _methodMap.get(id);
+                if (node !== undefined && method != null) {
+                    _nodes.updateOnly({
+                        id: id,
+                        size: node.size + NODE_SIZE_DELTA,
+                    });
+                    let updateEdges = new Array();
+                    let edgeSetKeys = ["outCalls", "inCalls", "inlinedCalls"];
+                    edgeSetKeys.forEach(edgeSetKey => {
+                        method[edgeSetKey].forEach((edgeId) => {
+                            const edge = _edges.get(edgeId);
+                            if (edge != null)
+                                updateEdges.push({ id: edgeId, width: _options.edges.width + EDGE_SIZE_DELTA });
+                        });
+
+                    });
+                    _edges.updateOnly(updateEdges);
+                }
+            });
+            _network.on("blurNode", (properties) => {
+                const id = properties.node;
+                const node = _nodes.get(id);
+                const method = _methodMap.get(id);
+                if (node !== null && method != null) {
+                    _nodes.updateOnly({
+                        id: id,
+                        size: node.size - NODE_SIZE_DELTA,
+                    });
+                    let updateEdges = new Array();
+                    let edgeSetKeys = ["outCalls", "inCalls", "inlinedCalls"];
+                    edgeSetKeys.forEach(edgeSetKey => {
+                        method[edgeSetKey].forEach((edgeId) => {
+                            const edge = _edges.get(edgeId);
+                            if (edge != null)
+                                updateEdges.push({ id: edgeId, width: _options.edges.width });
+                        });
+
+                    });
+                    _edges.updateOnly(updateEdges);
+                }
+            });
+            _network.on("beforeDrawing", (properties) => {
+                rotateEdges();
+            });
+            _network.on("afterDrawing", (properties) => {
+                drawOverlay();
+            });
+        }
+        // EVENTS ---------------------------------------------------------------------------------------------
+        window.addEventListener("resize", (event) => {
+            console.log('resized!');
+            _network.redraw();
+        });
+        window.addEventListener('load', (event) => {
+            const file = _fileInputElem.files[0];
+            if (!file) {
+                console.log('No file selected');
+                return;
+            }
+            console.log("reading file...");
+            displayLoading();
+            closeSidePanel();
+            _fileReader.readAsText(file);
+        });
+        _mySidePanelElem.addEventListener('transitionend', () => {
+            focusGraph(_focusedId);
+        });
+        _fileInputElem.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                console.log('No file selected');
+                return;
+            }
+            console.log("reading file...");
+            displayLoading();
+            closeSidePanel();
+            _fileReader.readAsText(file);
+        });
+        _fileReader.onload = (event) => {
+            try {
+                resetGlobals();
+                console.log("parsing json...");
+                const jsonData = JSON.parse(event.target.result);
+                console.log("parsed json!");
+                createGraph(jsonData);
+                hideLoading();
+            } catch (error) {
+                console.error('Error parsing JSON:', error);
+            }
+        };
+        _filterSliderElem.oninput = () => {
+            _filterInputElem.value = _filterSliderElem.value;
+        };
+        _filterSliderElem.onmouseup = () => {
+            applyFilter();
+        };
+        _filterInputElem.oninput = () => {
+            _filterInputElem.value = Math.max(_filterInputElem.value, _filterSliderElem.min);
+            _filterInputElem.value = Math.min(_filterInputElem.value, _filterSliderElem.max);
+            _filterSliderElem.value = _filterInputElem.value;
+        };
+        _filterInputElem.onmousedown = () => {
+            filterInputMouseDownValue = _filterInputElem.value;
+        };
+        _filterInputElem.onmouseup = () => {
+            if (filterInputMouseDownValue != _filterInputElem.value) {
+                applyFilter();
+            }
+        };
+        _filterInputElem.addEventListener("keyup", (event) => {
+            if (event.key == "Enter" || event.keyCode == 13) {
+                applyFilter();
+            }
+        });
+        _filterSelectElem.onchange = (event) => {
+            console.log("filter changed!");
+            highlightFilterInfo();
+            updateFilterBoundaries();
+            updateNodeSizes();
+            applyFilter();
+        };
+        _filterExtraOnlyElem.onchange = (event) => {
+            updateFilterBoundaries();
+            applyFilter();
+        };
+
+    </script>
+</body>
+
+</html>
