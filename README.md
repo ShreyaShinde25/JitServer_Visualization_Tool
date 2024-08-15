@@ -25,6 +25,12 @@ After completing the setup above, visualization data can be generated using the 
 2. Run the script named `gen_dacapo.sh <benchmark_name>` (which runs a Dacapo benchmark)
 3. Visualization input data for the benchmark program should be available in the directory `preprocessing/out` with the names `<benchmark_name>_trace_***.json`
 
+## How to Use the Visualization Tool
+0. Navigate to the `visualization/` directory.   
+1. Open the `visualize.html` file in a web browser.
+2. Select the `Choose File` option to upload the input data in the `***.json` format. For example, you can use `visualization/json/example.json` to visualize sample data. 
+3. Interact with the visualization by clicking on nodes/edges to view more detailed information.
+
 ## Visualization Input Data Format (*Per Graph*)
 - Input data should be as a **list** in JSON format
 - Input data should be divided into 2 sections ```methods``` and ```paths```
